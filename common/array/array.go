@@ -53,3 +53,18 @@ func AllSameNumbers[V Number](a []V) bool {
 	}
 	return true
 }
+
+func Clone[A any](a []A) []A {
+	n := make([]A, len(a), len(a))
+	copy(n, a)
+	return n
+}
+
+func Reverse[A any](a []A) []A {
+	b := Clone[A](a)
+	lh := len(a) / 2
+	for i, j := 0, len(b)-1; i < lh; i, j = i+1, j-1 {
+		b[i], b[j] = b[j], b[i]
+	}
+	return b
+}

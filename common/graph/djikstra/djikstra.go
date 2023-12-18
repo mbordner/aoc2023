@@ -2,7 +2,7 @@ package djikstra
 
 import (
 	hp "container/heap"
-	"github.com/mbordner/aoc2022/common/graph"
+	"github.com/mbordner/aoc2023/common/graph"
 	"math"
 )
 
