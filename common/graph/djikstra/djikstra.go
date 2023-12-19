@@ -162,7 +162,7 @@ func GenerateShortestPaths(g *graph.Graph, source *graph.Node) ShortestPaths {
 		}
 
 		// at this point, current is marked as visited, and will remain removed
-		// we are marking it visited so we don't explore it again from another node's edges.
+		// we are marking it visited, so we don't explore it again from another node's edges.
 		sps[current.Node.GetID()].visited = true
 	}
 

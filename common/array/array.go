@@ -68,3 +68,49 @@ func Reverse[A any](a []A) []A {
 	}
 	return b
 }
+
+func SwapRowCols[A any](a [][]A) [][]A {
+	cl := len(a)
+	rl := len(a[0])
+
+	b := make([][]A, rl)
+	for j := 0; j < rl; j++ {
+		b[j] = make([]A, cl)
+		for i := 0; i < cl; i++ {
+			b[j][i] = a[i][j]
+		}
+	}
+
+	return b
+}
+
+func Keys[A comparable, V any](m map[A]V) []A {
+	a := make([]A, len(m))
+	i := 0
+	for k, _ := range m {
+		a[i] = k
+		i++
+	}
+	return a
+}
+
+func Values[A comparable, V any](m map[A]V) []V {
+	a := make([]V, len(m))
+	i := 0
+	for _, v := range m {
+		a[i] = v
+		i++
+	}
+	return a
+}
+
+// ( N * N-1 ) / 2
+func Pairs[V any](a []V) [][]V {
+	b := make([][]V, 0, (len(a)*len(a)-1)/2)
+	for j := 0; j < len(a); j++ {
+		for i := j + 1; i < len(a); i++ {
+			b = append(b, []V{a[j], a[i]})
+		}
+	}
+	return b
+}

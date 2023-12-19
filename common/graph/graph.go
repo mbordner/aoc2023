@@ -7,6 +7,8 @@ type TraversableEdgeFunction func(e *Edge) bool
 
 type VisitedNodes []*Node
 
+type PosNodeMap[V comparable] map[V]*Node
+
 func (vn VisitedNodes) Contains(n *Node) bool {
 	for _, node := range vn {
 		if node == n {
