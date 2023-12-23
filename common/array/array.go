@@ -54,6 +54,17 @@ func AllSameNumbers[V Number](a []V) bool {
 	return true
 }
 
+func Equals[V Number](a, b []V) bool {
+	if len(a) != len(b) {
+		for i := range a {
+			if a[i] != b[i] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func Clone[A any](a []A) []A {
 	n := make([]A, len(a), len(a))
 	copy(n, a)
