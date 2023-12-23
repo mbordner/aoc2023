@@ -230,6 +230,22 @@ func (p Pos) Transform(x, y, z int) Pos {
 	return Pos{X: p.X + x, Y: p.Y + y, Z: p.Z + z}
 }
 
+func (p Pos) TransformDirs(d Direction) []Pos {
+	np := make([]Pos, 0, 4)
+	if d.Is([]Direction{North}) {
+		np = append(np, p.Transform(0, -1, 0))
+	}
+	if d.Is([]Direction{East}) {
+		np = append(np, p.Transform(1, 0, 0))
+	}
+	if d.Is([]Direction{South}) {
+		np = append(np, p.Transform(0, 1, 0))
+	}
+	if d.Is([]Direction{West}) {
+		np = append(np, p.Transform(-1, 0, 0))
+	}
+	return np
+}
 func (p Pos) Diff(o Pos) Pos {
 	v := Pos{
 		X: p.X - o.X,
