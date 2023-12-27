@@ -10,3 +10,8 @@ func Factorial[V Number](v V) V {
 	}
 	return v * Factorial(v-V(1))
 }
+
+var (
+	MaxInt   = int(^uint(0) >> 1)
+	MaxInt64 = int64(^uint64(0) >> 1)
+)

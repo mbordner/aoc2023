@@ -125,3 +125,12 @@ func Pairs[V any](a []V) [][]V {
 	}
 	return b
 }
+
+func Contains[V comparable](h []V, n V) bool {
+	for _, v := range h {
+		if v == n {
+			return true
+		}
+	}
+	return false
+}

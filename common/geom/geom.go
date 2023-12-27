@@ -25,6 +25,24 @@ func (d Direction) Is(dirs []Direction) bool {
 	return false
 }
 
+func (d Direction) Not(possible []Direction, exclude []Direction) []Direction {
+	can := make(map[Direction]bool)
+	for _, dir := range possible {
+		can[dir] = true
+	}
+	can[d] = false
+	for _, dir := range exclude {
+		can[dir] = false
+	}
+	ds := make([]Direction, 0, len(possible))
+	for dir, b := range can {
+		if b {
+			ds = append(ds, dir)
+		}
+	}
+	return ds
+}
+
 func (d Direction) Opposite() Direction {
 	o := 0
 	if int(d)&int(North) == int(North) {
