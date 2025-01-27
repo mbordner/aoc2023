@@ -1,6 +1,8 @@
 package array
 
 import (
+	"cmp"
+	"slices"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -103,6 +105,12 @@ func Keys[A comparable, V any](m map[A]V) []A {
 		i++
 	}
 	return a
+}
+
+func SortedKeys[A cmp.Ordered, V any](m map[A]V) []A {
+	keys := Keys(m)
+	slices.Sort(keys)
+	return keys
 }
 
 func Values[A comparable, V any](m map[A]V) []V {

@@ -9,27 +9,27 @@ import (
 
 func main() {
 	bb, hl := getData("../test1.txt")
-	start := geom.Pos{Y: bb.MinY, X: bb.MinX}
-	end := geom.Pos{Y: bb.MaxY, X: bb.MaxX}
+	start := geom.Pos[int]{Y: bb.MinY, X: bb.MinX}
+	end := geom.Pos[int]{Y: bb.MaxY, X: bb.MaxX}
 
-	loss := heatLoss(bb, hl, end, geom.Unknown, 0, start, []geom.Pos{})
+	loss := heatLoss(bb, hl, end, geom.Unknown, 0, start, []geom.Pos[int]{})
 	fmt.Println(loss)
 }
 
 type dpks struct {
 	d  geom.Direction
 	dc int
-	p  geom.Pos
+	p  geom.Pos[int]
 }
 
 type DP map[dpks]int
-type VC map[geom.Pos]int
+type VC map[geom.Pos[int]]int
 
 var (
 	dp = make(DP)
 )
 
-func heatLoss(bb geom.BoundingBox, hl [][]byte, end geom.Pos, d geom.Direction, dc int, p geom.Pos, path []geom.Pos) int {
+func heatLoss(bb geom.BoundingBox[int], hl [][]byte, end geom.Pos[int], d geom.Direction, dc int, p geom.Pos[int], path []geom.Pos[int]) int {
 	dpk := dpks{d: d, dc: dc, p: p}
 	if v, e := dp[dpk]; e {
 		return v
@@ -87,14 +87,14 @@ func heatLoss(bb geom.BoundingBox, hl [][]byte, end geom.Pos, d geom.Direction, 
 	return dp[dpk]
 }
 
-func getData(path string) (geom.BoundingBox, [][]byte) {
-	bb := geom.BoundingBox{}
+func getData(path string) (geom.BoundingBox[int], [][]byte) {
+	bb := geom.BoundingBox[int]{}
 	lines, _ := file.GetLines(path)
 	heatLoss := make([][]byte, len(lines))
 	for j, line := range lines {
 		bytes := make([]byte, len(line))
 		for i, b := range line {
-			bb.Extend(geom.Pos{Y: j, X: i})
+			bb.Extend(geom.Pos[int]{Y: j, X: i})
 			bytes[i] = byte(b - '0')
 		}
 		heatLoss[j] = bytes
