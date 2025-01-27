@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/mbordner/aoc2023/common/array"
-	"github.com/mbordner/aoc2023/common/cmath"
-	"github.com/mbordner/aoc2023/common/file"
 	"log"
 	"regexp"
 	"strings"
+
+	"github.com/mbordner/aoc2023/common/array"
+	"github.com/mbordner/aoc2023/common/cmath"
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 type conditionRecord struct {
@@ -125,7 +126,7 @@ func generatePossibleArrangements(condition string, checks []int) []string {
 }
 
 func getData(path string) []*conditionRecord {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	crs := make([]*conditionRecord, len(lines))
 	for i, line := range lines {
 		cr := conditionRecord{}

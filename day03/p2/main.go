@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/mbordner/aoc2023/common/file"
 	"regexp"
 	"strconv"
+
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 type pos struct {
@@ -32,7 +33,7 @@ func checkPart(lines []string, num pos, val int64, symbol pos) bool {
 }
 
 func main() {
-	lines, _ := file.GetLines("../data.txt")
+	lines, _ := files.GetLines("../data.txt")
 	sum := int64(0)
 	for j, line := range lines {
 		matches := reDigits.FindAllStringIndex(line, -1)

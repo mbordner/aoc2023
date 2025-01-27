@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/mbordner/aoc2023/common/array"
-	"github.com/mbordner/aoc2023/common/file"
 	"log"
+
+	"github.com/mbordner/aoc2023/common/array"
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 type dps map[string]map[int]bool
@@ -110,7 +111,7 @@ func check(bs []byte, c int, dp dps) bool {
 }
 
 func getData(path string) [][][]byte {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	data := make([][][]byte, 0)
 
 	pattern := make([][]byte, 0)

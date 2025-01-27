@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/mbordner/aoc2023/common/array/ints"
-	"github.com/mbordner/aoc2023/common/file"
 	"strings"
+
+	"github.com/mbordner/aoc2023/common/array/ints"
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 func wins(time, distance int64) (distances []int64) {
@@ -29,7 +30,7 @@ func main() {
 }
 
 func getData(path string) (times, distances []int64) {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	times = ints.NumVals(lines[0][strings.Index(lines[0], ":")+1:])
 	distances = ints.NumVals(lines[1][strings.Index(lines[1], ":")+1:])
 	return

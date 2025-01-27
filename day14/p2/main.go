@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/mbordner/aoc2023/common/array"
-	"github.com/mbordner/aoc2023/common/file"
+	"github.com/mbordner/aoc2023/common/files"
 	"github.com/mbordner/aoc2023/common/geom"
 )
 
@@ -170,7 +171,7 @@ func main() {
 
 func getPlatform(path string) *platformObj {
 	p := new(platformObj)
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	p.rows = make([][]byte, len(lines))
 	for i, line := range lines {
 		p.rows[i] = []byte(line)

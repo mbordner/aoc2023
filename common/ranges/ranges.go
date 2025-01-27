@@ -6,7 +6,7 @@ import (
 )
 
 type Number interface {
-	int | int32 | float32 | int64 | float64
+	int | int32 | float32 | int64 | uint64 | float64
 }
 
 type side int

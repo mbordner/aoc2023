@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/mbordner/aoc2023/common/file"
 	"log"
 	"math"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 type card struct {
@@ -51,7 +52,7 @@ func main() {
 }
 
 func getCards(path string) []card {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	cards := make([]card, len(lines), len(lines))
 	for i, line := range lines {
 		idMatch := reID.FindStringSubmatch(line)

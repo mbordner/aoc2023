@@ -1,8 +1,9 @@
 package expression
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Expressions(t *testing.T) {
@@ -13,6 +14,18 @@ func Test_Expressions(t *testing.T) {
 		input    map[string]int64
 		expected int64
 	}{
+		{
+			name:     "value",
+			expr:     "1",
+			input:    make(map[string]int64),
+			expected: int64(1),
+		},
+		{
+			name:     "negative value",
+			expr:     "-1",
+			input:    make(map[string]int64),
+			expected: int64(-1),
+		},
 		{
 			name:     "addition",
 			expr:     "1 + 1",
@@ -34,6 +47,12 @@ func Test_Expressions(t *testing.T) {
 		{
 			name:     "subtraction",
 			expr:     "1 - 1",
+			input:    make(map[string]int64),
+			expected: int64(0),
+		},
+		{
+			name:     "other subtraction",
+			expr:     "-1 + 1",
 			input:    make(map[string]int64),
 			expected: int64(0),
 		},
@@ -70,7 +89,9 @@ func Test_Expressions(t *testing.T) {
 			assert.Nil(t, err)
 			assert.NotNil(t, p)
 
-			v := p.Eval(tc.input)
+			var e error
+			v, e := p.Eval(tc.input)
+			assert.Nil(t, e)
 
 			assert.Equal(t, tc.expected, v)
 

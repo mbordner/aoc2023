@@ -2,21 +2,22 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/mbordner/aoc2023/common/array"
-	"github.com/mbordner/aoc2023/common/file"
+	"github.com/mbordner/aoc2023/common/files"
 	"github.com/mbordner/aoc2023/common/geom"
 )
 
 type step struct {
 	d geom.Direction
-	p geom.Pos
+	p geom.Pos[int]
 }
 
 type stepCountMap map[step]int
-type tileCountMap map[geom.Pos]int
-type tilesMap map[geom.Pos]byte
+type tileCountMap map[geom.Pos[int]]int
+type tilesMap map[geom.Pos[int]]byte
 
-func takeStep(bb *geom.BoundingBox, grid tilesMap, stepCounts stepCountMap, tileCounts tileCountMap, s step) {
+func takeStep(bb *geom.BoundingBox[int], grid tilesMap, stepCounts stepCountMap, tileCounts tileCountMap, s step) {
 
 	if v, e := stepCounts[s]; e {
 		stepCounts[s] = v + 1
@@ -85,7 +86,7 @@ func takeStep(bb *geom.BoundingBox, grid tilesMap, stepCounts stepCountMap, tile
 	}
 }
 
-func print(bb *geom.BoundingBox, grid tilesMap, counts tileCountMap) {
+func print(bb *geom.BoundingBox[int], grid tilesMap, counts tileCountMap) {
 	pss := bb.GetPositions()
 	chars := make([]rune, len(pss))
 	for i, p := range pss {
@@ -108,12 +109,12 @@ func main() {
 	stepsSize := (bb.MaxY-bb.MinY+1)*2 + (bb.MaxX-bb.MinX+1)*2
 	steps := make([]step, 0, stepsSize)
 	for x := bb.MinX; x <= bb.MaxX; x++ {
-		steps = append(steps, step{d: geom.South, p: geom.Pos{Y: bb.MinY, X: x}})
-		steps = append(steps, step{d: geom.North, p: geom.Pos{Y: bb.MaxY, X: x}})
+		steps = append(steps, step{d: geom.South, p: geom.Pos[int]{Y: bb.MinY, X: x}})
+		steps = append(steps, step{d: geom.North, p: geom.Pos[int]{Y: bb.MaxY, X: x}})
 	}
 	for y := bb.MinY; y <= bb.MaxY; y++ {
-		steps = append(steps, step{d: geom.East, p: geom.Pos{Y: y, X: bb.MinX}})
-		steps = append(steps, step{d: geom.East, p: geom.Pos{Y: y, X: bb.MaxX}})
+		steps = append(steps, step{d: geom.East, p: geom.Pos[int]{Y: y, X: bb.MinX}})
+		steps = append(steps, step{d: geom.East, p: geom.Pos[int]{Y: y, X: bb.MaxX}})
 	}
 
 	c := make(chan int)
@@ -137,22 +138,22 @@ func main() {
 	fmt.Println(maxV)
 }
 
-func takeSteps(bb *geom.BoundingBox, grid tilesMap, s step) int {
+func takeSteps(bb *geom.BoundingBox[int], grid tilesMap, s step) int {
 	tileCounts := make(tileCountMap)
 	stepCounts := make(stepCountMap)
 	takeStep(bb, grid, stepCounts, tileCounts, s)
 	return len(tileCounts)
 }
 
-func getData(path string) (*geom.BoundingBox, tilesMap) {
-	lines, _ := file.GetLines(path)
+func getData(path string) (*geom.BoundingBox[int], tilesMap) {
+	lines, _ := files.GetLines(path)
 
-	bb := geom.BoundingBox{}
+	bb := geom.BoundingBox[int]{}
 	grid := make(tilesMap)
 
 	for j, y := len(lines)-1, 0; j >= 0; j, y = j-1, y-1 {
 		for i := 0; i < len(lines[j]); i++ {
-			p := geom.Pos{Y: y, X: i}
+			p := geom.Pos[int]{Y: y, X: i}
 			grid[p] = lines[j][i]
 			bb.Extend(p)
 		}

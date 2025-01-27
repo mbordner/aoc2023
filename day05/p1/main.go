@@ -3,12 +3,13 @@ package main
 import (
 	"cmp"
 	"fmt"
-	"github.com/mbordner/aoc2023/common/file"
 	"log"
 	"regexp"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 var (
@@ -87,7 +88,7 @@ func main() {
 }
 
 func getData(path string) ([]int64, []*mapCategory) {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	seeds := numValues(lines[0][7:])
 	cats := make([]*mapCategory, 0, 7)
 

@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/mbordner/aoc2023/common/file"
 	"log"
 	"strings"
+
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 func hash(s string) int {
@@ -31,6 +32,6 @@ func main() {
 }
 
 func getData(path string) []string {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	return strings.Split(lines[0], ",")
 }

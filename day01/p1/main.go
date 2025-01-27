@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/mbordner/aoc2023/common/file"
+
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 func main() {
@@ -35,6 +36,6 @@ func digit(c byte) int {
 }
 
 func getLines(path string) []string {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	return lines
 }

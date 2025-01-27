@@ -3,9 +3,10 @@ package main
 import (
 	"cmp"
 	"fmt"
-	"github.com/mbordner/aoc2023/common/file"
 	"regexp"
 	"slices"
+
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 var (
@@ -191,7 +192,7 @@ func main() {
 }
 
 func getData(path string) (*directionsObj, nodesObj) {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	dirs := newDirections(lines[0])
 	nodes := make(nodesObj)
 	for i := 2; i < len(lines); i++ {

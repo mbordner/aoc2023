@@ -2,6 +2,7 @@ package expression
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 )
 
@@ -154,38 +155,57 @@ func (o *Operator) EvalKnown(vars map[string]int64) (int64, error) {
 	case "*":
 		return l * r, nil
 	case "/":
+		if l%r != 0 {
+			return 0, errors.New("not divisible")
+		}
 		return l / r, nil
 	}
 	panic(errors.New("unknown operator"))
 }
 
-func (o *Operator) Eval(vars map[string]int64) int64 {
+func (o *Operator) Eval(vars map[string]int64) (int64, error) {
+	var e error
 	var l, r int64
 	switch tl := o.left.(type) {
 	case Variable:
-		l = tl.Eval(vars)
+		l, e = tl.Eval(vars)
+		if e != nil {
+			return 0, e
+		}
 	case int64:
 		l = tl
 	case *Operator:
-		l = tl.Eval(vars)
+		l, e = tl.Eval(vars)
+		if e != nil {
+			return 0, e
+		}
 	}
 	switch tr := o.right.(type) {
 	case Variable:
-		r = tr.Eval(vars)
+		r, e = tr.Eval(vars)
+		if e != nil {
+			return 0, e
+		}
 	case int64:
 		r = tr
 	case *Operator:
-		r = tr.Eval(vars)
+		r, e = tr.Eval(vars)
+		if e != nil {
+			return 0, e
+		}
 	}
 	switch o.op {
 	case "-":
-		return l - r
+		return l - r, nil
 	case "+":
-		return l + r
+		return l + r, nil
 	case "*":
-		return l * r
+		return l * r, nil
 	case "/":
-		return l / r
+		if l%r != 0 {
+			return 0, errors.New("not divisible")
+		}
+		return l / r, nil
 	}
 	panic(errors.New("unknown operator"))
 }

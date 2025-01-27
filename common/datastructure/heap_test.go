@@ -46,4 +46,7 @@ func TestNewAnyHeap(t *testing.T) {
 	assert.Equal(t, `[0 0]`, fmt.Sprintf(`%v`, sd))
 
 	assert.Equal(t, `[1 2]`, fmt.Sprintf(`%v`, h.Peek()))
+
+	assert.Equal(t, `[1 3]`, fmt.Sprintf(`%v`, h.Get(1)))
+	assert.Equal(t, `[0 4]`, fmt.Sprintf(`%v`, h.Get(2)))
 }

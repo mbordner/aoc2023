@@ -1,9 +1,10 @@
 package expression
 
 import (
-	"github.com/pkg/errors"
 	"regexp"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 // https://www.engr.mun.ca/~theo/Misc/exp_parsing.htm
@@ -11,7 +12,8 @@ import (
 var (
 	reSpace       = regexp.MustCompile(`\s`)
 	reOperator    = regexp.MustCompile(`\+|\*|\-|\/`)
-	reDigits      = regexp.MustCompile(`^\d+$`)
+	reDigitChar   = regexp.MustCompile(`^(\-|\d)$`)
+	reDigits      = regexp.MustCompile(`^-?\d+$`)
 	reVariable    = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9]*$`)
 	precedenceMap = map[string]int{
 		"*": 10,
@@ -125,8 +127,11 @@ func (p *Parser) next() (string, error) {
 
 	p.end = p.start
 
-	if reDigits.MatchString(string(p.expr[p.start])) {
-		for p.end < len(p.expr) && reDigits.MatchString(string(p.expr[p.end])) {
+	if reDigitChar.MatchString(string(p.expr[p.start])) {
+		if string(p.expr[p.start]) == "-" {
+			p.end++
+		}
+		for p.end < len(p.expr) && reDigits.MatchString(string(p.expr[p.start:p.end+1])) {
 			p.end++
 		}
 	} else if p.expr[p.start] == '(' || p.expr[p.start] == ')' {
@@ -148,12 +153,28 @@ func (p *Parser) consume() {
 	p.start = p.end
 }
 
-func (p *Parser) Eval(vars map[string]int64) int64 {
-	return p.operands[0].(*Operator).Eval(vars)
+func (p *Parser) Eval(vars map[string]int64) (int64, error) {
+	if len(p.operands) == 1 {
+		switch v := p.operands[0].(type) {
+		case int64:
+			return v, nil
+		case *Operator:
+			return v.Eval(vars)
+		}
+	}
+	panic("invalid operands")
 }
 
 func (p *Parser) EvalKnown(vars map[string]int64) (int64, error) {
-	return p.operands[0].(*Operator).EvalKnown(vars)
+	if len(p.operands) == 1 {
+		switch v := p.operands[0].(type) {
+		case int64:
+			return v, nil
+		case *Operator:
+			return v.EvalKnown(vars)
+		}
+	}
+	panic("invalid operands")
 }
 
 func (p *Parser) RootOperator() *Operator {

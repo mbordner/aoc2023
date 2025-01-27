@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/mbordner/aoc2023/common/file"
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 const (
@@ -46,7 +47,7 @@ func main() {
 }
 
 func getGameObjs(path string) []gameObj {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	games := make([]gameObj, len(lines), len(lines))
 
 	for i, line := range lines {

@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/mbordner/aoc2023/common/file"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 type typeHand int
@@ -153,7 +154,7 @@ func main() {
 }
 
 func getData(path string) []*handBid {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	handBids := make([]*handBid, len(lines), len(lines))
 	for i, line := range lines {
 		tokens := strings.Split(line, " ")

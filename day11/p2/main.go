@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/mbordner/aoc2023/common/array"
-	"github.com/mbordner/aoc2023/common/file"
+	"github.com/mbordner/aoc2023/common/files"
 	"github.com/mbordner/aoc2023/common/geom"
 	"github.com/mbordner/aoc2023/common/graph"
 	"github.com/mbordner/aoc2023/common/graph/djikstra"
-	"log"
 )
 
 const (
@@ -63,7 +64,7 @@ func main() {
 		log.Fatal("no nodes?")
 	}
 
-	sps := make(map[geom.Pos]djikstra.ShortestPaths)
+	sps := make(map[geom.Pos[int]]djikstra.ShortestPaths)
 
 	pairs := array.Pairs(array.Keys(gm))
 	for _, pair := range pairs {
@@ -88,17 +89,17 @@ func main() {
 	fmt.Println(sum)
 }
 
-func getGraph(sky [][]rune) (*graph.Graph, geom.BoundingBox, graph.PosNodeMap[geom.Pos]) {
-	bb := geom.BoundingBox{}
+func getGraph(sky [][]rune) (*graph.Graph, geom.BoundingBox[int], graph.PosNodeMap[geom.Pos[int]]) {
+	bb := geom.BoundingBox[int]{}
 	g := graph.NewGraph()
-	mg := make(graph.PosNodeMap[geom.Pos])
+	mg := make(graph.PosNodeMap[geom.Pos[int]])
 
 	var s *graph.Node
 
 	// create nodes
 	for j := 0; j < len(sky); j++ {
 		for i := 0; i < len(sky[j]); i++ {
-			p := geom.Pos{Y: j, X: i}
+			p := geom.Pos[int]{Y: j, X: i}
 			if bb.GetPositionsSize() == 0 {
 				bb.SetExtents(p.X, p.Y, p.Z, p.X, p.Y, p.Z)
 			} else {
@@ -126,7 +127,7 @@ func getGraph(sky [][]rune) (*graph.Graph, geom.BoundingBox, graph.PosNodeMap[ge
 		} else if t == "2" {
 			cost = multiplier * 2
 		}
-		targets := make(map[geom.Direction]geom.Pos) // targets
+		targets := make(map[geom.Direction]geom.Pos[int]) // targets
 		targets[geom.North] = p.Transform(0, -1, 0)
 		targets[geom.West] = p.Transform(-1, 0, 0)
 		targets[geom.East] = p.Transform(1, 0, 0)
@@ -144,7 +145,7 @@ func getGraph(sky [][]rune) (*graph.Graph, geom.BoundingBox, graph.PosNodeMap[ge
 }
 
 func getData(path string) [][]rune {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	data := make([][]rune, len(lines), len(lines))
 	for i, line := range lines {
 		data[i] = []rune(line)

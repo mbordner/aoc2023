@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/mbordner/aoc2023/common/array"
-	"github.com/mbordner/aoc2023/common/file"
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 func next(vals []int64) int64 {
@@ -43,7 +44,7 @@ func main() {
 }
 
 func getData(path string) [][]int64 {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	data := make([][]int64, len(lines), len(lines))
 	for i := range lines {
 		data[i] = array.ToNumbers[int64](lines[i], " ")

@@ -2,11 +2,111 @@ package geom
 
 import (
 	"fmt"
+	"github.com/mbordner/aoc2023/common/array"
+	"log"
 	"math"
 	"strings"
 )
 
 type Direction int
+
+type IntNumber interface {
+	int | int32 | int64
+}
+
+type GridBox[T IntNumber] struct {
+	P0 Pos[T] // nw corner
+	P1 Pos[T] // ne corner
+	P2 Pos[T] // se corner
+	P3 Pos[T] // sw corner
+}
+
+func NewGridBox[T IntNumber](p0, p1, p2, p3 Pos[T]) GridBox[T] {
+	gb := GridBox[T]{
+		P0: p0,
+		P1: p1,
+		P2: p2,
+		P3: p3,
+	}
+	if (p0.Y != p1.Y) ||
+		(p2.Y != p3.Y) ||
+		(p2.Y == p1.Y) ||
+		(p0.X != p3.X) ||
+		(p1.X != p2.X) ||
+		(p1.X == p3.X) {
+		log.Fatalln("invalid grid box points")
+	}
+	return gb
+}
+
+func (gb GridBox[T]) Area() T {
+	top := GridLine[T]{P0: gb.P0, P1: gb.P1}
+	right := GridLine[T]{P0: gb.P1, P1: gb.P2}
+	tl := top.Length()
+	rl := right.Length()
+	return tl * rl
+}
+
+type PosGridLines[T IntNumber] map[Pos[T]][]GridLine[T]
+type GridLines[T IntNumber] map[GridLine[T]]Direction
+
+type GridLine[T IntNumber] struct {
+	P0 Pos[T]
+	P1 Pos[T]
+}
+
+func (g GridLine[T]) Length() T {
+	o := g.P1.Subtract(g.P0)
+	return Abs(o.X + o.Y)
+}
+
+func (g GridLine[T]) Direction() Direction {
+	o := g.P1.Subtract(g.P0)
+	o = o.Normalize()
+	switch o {
+	case Pos[T]{X: T(0), Y: T(-1), Z: T(0)}:
+		return North
+	case Pos[T]{X: T(1), Y: T(0), Z: T(0)}:
+		return East
+	case Pos[T]{X: T(0), Y: T(1), Z: T(0)}:
+		return South
+	case Pos[T]{X: T(-1), Y: T(0), Z: T(0)}:
+		return West
+	}
+	return Unknown
+}
+
+func (g GridLine[T]) ContainsGridLine(gl GridLine[T]) bool {
+	return g.ContainsPoint(gl.P0) && g.ContainsPoint(gl.P1)
+}
+
+func (g GridLine[T]) ContainsPoint(p Pos[T]) bool {
+	if p.X == g.P0.X && p.X == g.P1.X {
+		if p.Y >= Min(g.P0.Y, g.P1.Y) && p.Y <= Max(g.P0.Y, g.P1.Y) {
+			return true
+		}
+	} else if p.Y == g.P0.Y && p.Y == g.P1.Y {
+		if p.X >= Min(g.P0.X, g.P1.X) && p.X <= Max(g.P0.X, g.P1.X) {
+			return true
+		}
+	}
+	return false
+}
+
+func (pgls PosGridLines[T]) Add(p Pos[T], gl GridLine[T]) {
+	if gls, e := pgls[p]; e {
+		if !array.Contains(gls, gl) {
+			pgls[p] = append(pgls[p], gl)
+		}
+	} else {
+		pgls[p] = []GridLine[T]{gl}
+	}
+}
+
+func (pgls PosGridLines[T]) AddLine(gl GridLine[T]) {
+	pgls.Add(gl.P0, gl)
+	pgls.Add(gl.P1, gl)
+}
 
 const (
 	Unknown Direction = 0
@@ -60,16 +160,16 @@ func (d Direction) Opposite() Direction {
 	return Direction(o)
 }
 
-type BoundingBox struct {
-	MinX int
-	MaxX int
-	MinY int
-	MaxY int
-	MinZ int
-	MaxZ int
+type BoundingBox[T IntNumber] struct {
+	MinX T
+	MaxX T
+	MinY T
+	MaxY T
+	MinZ T
+	MaxZ T
 }
 
-func (bb *BoundingBox) SetExtents(x1, y1, z1, x2, y2, z2 int) {
+func (bb *BoundingBox[T]) SetExtents(x1, y1, z1, x2, y2, z2 T) {
 	bb.MinX = x1
 	bb.MinY = y1
 	bb.MinZ = z1
@@ -78,37 +178,37 @@ func (bb *BoundingBox) SetExtents(x1, y1, z1, x2, y2, z2 int) {
 	bb.MaxZ = z2
 }
 
-func (bb BoundingBox) XMin() int {
+func (bb BoundingBox[T]) XMin() T {
 	return bb.MinX
 }
 
-func (bb BoundingBox) XMax() int {
+func (bb BoundingBox[T]) XMax() T {
 	return bb.MaxX
 }
 
-func (bb BoundingBox) YMin() int {
+func (bb BoundingBox[T]) YMin() T {
 	return bb.MinY
 }
 
-func (bb BoundingBox) YMax() int {
+func (bb BoundingBox[T]) YMax() T {
 	return bb.MaxY
 }
 
-func (bb BoundingBox) ZMin() int {
+func (bb BoundingBox[T]) ZMin() T {
 	return bb.MinZ
 }
 
-func (bb BoundingBox) ZMax() int {
+func (bb BoundingBox[T]) ZMax() T {
 	return bb.MaxZ
 }
 
-func (bb BoundingBox) String() string {
-	p1 := Pos{X: bb.MinX, Y: bb.MinY}
-	p2 := Pos{X: bb.MaxX, Y: bb.MaxY}
+func (bb BoundingBox[T]) String() string {
+	p1 := Pos[T]{X: bb.MinX, Y: bb.MinY}
+	p2 := Pos[T]{X: bb.MaxX, Y: bb.MaxY}
 	return fmt.Sprintf("[%s, %s]", p1, p2)
 }
 
-func (bb *BoundingBox) Extend(p Pos) {
+func (bb *BoundingBox[T]) Extend(p Pos[T]) {
 	if p.X < bb.MinX {
 		bb.MinX = p.X
 	}
@@ -129,7 +229,7 @@ func (bb *BoundingBox) Extend(p Pos) {
 	}
 }
 
-func (bb *BoundingBox) Contains(p Pos) bool {
+func (bb *BoundingBox[T]) Contains(p Pos[T]) bool {
 	if p.X < bb.MinX || p.X > bb.MaxX {
 		return false
 	}
@@ -142,7 +242,7 @@ func (bb *BoundingBox) Contains(p Pos) bool {
 	return true
 }
 
-func (bb *BoundingBox) Surrounds(obb *BoundingBox) bool {
+func (bb *BoundingBox[T]) Surrounds(obb *BoundingBox[T]) bool {
 	if obb.MinX < bb.MinX {
 		return false
 	}
@@ -164,7 +264,7 @@ func (bb *BoundingBox) Surrounds(obb *BoundingBox) bool {
 	return true
 }
 
-func (bb *BoundingBox) GetDirection(p Pos) Direction {
+func (bb *BoundingBox[T]) GetDirection(p Pos[T]) Direction {
 	dir := 0
 	if p.X < bb.MinX {
 		dir |= int(West)
@@ -181,14 +281,14 @@ func (bb *BoundingBox) GetDirection(p Pos) Direction {
 	return Direction(dir)
 }
 
-func (bb *BoundingBox) Intersects(p1, p2 Pos) bool {
+func (bb *BoundingBox[T]) Intersects(p1, p2 Pos[T]) bool {
 	return false
 }
 
-func (bb *BoundingBox) GetPrintLines(defaultChar rune, chars []rune, pss Positions) []string {
+func (bb *BoundingBox[T]) GetPrintLines(defaultChar rune, chars []rune, pss Positions[T]) []string {
 	lines := make([]string, 0, bb.MaxY-bb.MinY+1)
 
-	charMap := make(map[Pos]rune)
+	charMap := make(map[Pos[T]]rune)
 	if chars != nil && pss != nil && len(chars) == len(pss) {
 		for i := range chars {
 			pss[i].Z = 0
@@ -200,7 +300,7 @@ func (bb *BoundingBox) GetPrintLines(defaultChar rune, chars []rune, pss Positio
 		lineRunes := make([]rune, l, l)
 		for j, c := bb.MinX, 0; j <= bb.MaxX; j, c = j+1, c+1 {
 			lineRunes[c] = defaultChar
-			if char, exists := charMap[Pos{X: j, Y: i, Z: 0}]; exists {
+			if char, exists := charMap[Pos[T]{X: j, Y: i, Z: 0}]; exists {
 				lineRunes[c] = char
 			}
 		}
@@ -210,15 +310,10 @@ func (bb *BoundingBox) GetPrintLines(defaultChar rune, chars []rune, pss Positio
 	return lines
 }
 
-func (bb *BoundingBox) DistanceFromEdge(p Pos) int {
-	d := math.MaxInt64
+func (bb *BoundingBox[T]) DistanceFromEdge(p Pos[T]) T {
+	d := bb.MaxX - p.X
 
-	t := bb.MaxX - p.X
-	if t < d {
-		d = t
-	}
-
-	t = p.X - bb.MinX
+	t := p.X - bb.MinX
 	if t < d {
 		d = t
 	}
@@ -236,20 +331,60 @@ func (bb *BoundingBox) DistanceFromEdge(p Pos) int {
 	return d
 }
 
-type Positions []Pos
+type Positions[T IntNumber] []Pos[T]
 
-type Pos struct {
-	X int
-	Y int
-	Z int
+type Pos[T IntNumber] struct {
+	X T
+	Y T
+	Z T
 }
 
-func (p Pos) Transform(x, y, z int) Pos {
-	return Pos{X: p.X + x, Y: p.Y + y, Z: p.Z + z}
+func (p Pos[T]) Distance(p2 Pos[T]) float64 {
+	return math.Sqrt(math.Pow(float64(p2.X-p.X), 2) + math.Pow(float64(p2.Y-p.Y), 2) + math.Pow(float64(p2.Z-p.Z), 2))
 }
 
-func (p Pos) TransformDirs(d Direction) []Pos {
-	np := make([]Pos, 0, 4)
+func (p Pos[T]) Subtract(o Pos[T]) Pos[T] {
+	return p.Transform(-o.X, -o.Y, -o.Z)
+}
+
+func (p Pos[T]) Scale(s T) Pos[T] {
+	return Pos[T]{X: p.X * s, Y: p.Y * s, Z: p.Z * s}
+}
+
+func (p Pos[T]) Normalize() Pos[T] {
+	o := Pos[T]{X: p.X, Y: p.Y, Z: p.Z}
+	if o.X != 0 {
+		o.X = o.X / Abs(o.X)
+	}
+	if o.Y != 0 {
+		o.Y = o.Y / Abs(o.Y)
+	}
+	if o.Z != 0 {
+		o.Z = o.Z / Abs(o.Z)
+	}
+	return o
+}
+
+func (p Pos[T]) Transform(x, y, z T) Pos[T] {
+	return Pos[T]{X: p.X + x, Y: p.Y + y, Z: p.Z + z}
+}
+
+func (p Pos[T]) TransformDir(d Direction, count T) Pos[T] {
+	switch d {
+	case North:
+		return p.Transform(0, T(-count), 0)
+	case East:
+		return p.Transform(T(count), 0, 0)
+	case South:
+		return p.Transform(0, T(count), 0)
+	case West:
+		return p.Transform(T(-count), 0, 0)
+	}
+	return p.Transform(0, 0, 0)
+}
+
+func (p Pos[T]) TransformDirs(d Direction) []Pos[T] {
+	np := make([]Pos[T], 0, 4)
 	if d.Is([]Direction{North}) {
 		np = append(np, p.Transform(0, -1, 0))
 	}
@@ -264,8 +399,8 @@ func (p Pos) TransformDirs(d Direction) []Pos {
 	}
 	return np
 }
-func (p Pos) Diff(o Pos) Pos {
-	v := Pos{
+func (p Pos[T]) Diff(o Pos[T]) Pos[T] {
+	v := Pos[T]{
 		X: p.X - o.X,
 		Y: p.Y - o.Y,
 		Z: p.Z - o.Z,
@@ -273,47 +408,47 @@ func (p Pos) Diff(o Pos) Pos {
 	return v
 }
 
-func (p Pos) ManhattanDistance(o Pos) int {
-	return Max(p.X, o.X) - Min(p.X, o.X) +
-		Max(p.Y, o.Y) - Min(p.Y, o.Y) +
-		Max(p.Z, o.Z) - Min(p.Z, o.Z)
+func (p Pos[T]) ManhattanDistance(o Pos[T]) T {
+	return Max[T](p.X, o.X) - Min[T](p.X, o.X) +
+		Max[T](p.Y, o.Y) - Min[T](p.Y, o.Y) +
+		Max[T](p.Z, o.Z) - Min[T](p.Z, o.Z)
 }
 
-func (p Pos) GetXYPositionsAtManhattanDistance(d int) Positions {
-	ps := make(Positions, 0, ((d-1)*4)+4)
+func (p Pos[T]) GetXYPositionsAtManhattanDistance(d T) Positions[T] {
+	ps := make(Positions[T], 0, ((d-1)*4)+4)
 
-	left := Pos{X: p.X - d, Y: p.Y}
-	right := Pos{X: p.X + d, Y: p.Y}
-	top := Pos{X: p.X, Y: p.Y - d}
-	bottom := Pos{X: p.X, Y: p.Y + d}
+	left := Pos[T]{X: p.X - d, Y: p.Y}
+	right := Pos[T]{X: p.X + d, Y: p.Y}
+	top := Pos[T]{X: p.X, Y: p.Y - d}
+	bottom := Pos[T]{X: p.X, Y: p.Y + d}
 
-	ps = append(ps, Positions{top, bottom, left, right}...)
+	ps = append(ps, Positions[T]{top, bottom, left, right}...)
 
-	for j := 1; j < d; j++ {
+	for j := T(1); j < d; j++ {
 		dx := d - j
 		topY, bottomY := p.Y-j, p.Y+j
-		topLeft := Pos{X: p.X - dx, Y: topY}
-		topRight := Pos{X: p.X + dx, Y: topY}
-		bottomLeft := Pos{X: p.X - dx, Y: bottomY}
-		bottomRight := Pos{X: p.X + dx, Y: bottomY}
+		topLeft := Pos[T]{X: p.X - dx, Y: topY}
+		topRight := Pos[T]{X: p.X + dx, Y: topY}
+		bottomLeft := Pos[T]{X: p.X - dx, Y: bottomY}
+		bottomRight := Pos[T]{X: p.X + dx, Y: bottomY}
 
-		ps = append(ps, Positions{topLeft, topRight, bottomLeft, bottomRight}...)
+		ps = append(ps, Positions[T]{topLeft, topRight, bottomLeft, bottomRight}...)
 	}
 
 	return ps
 }
 
 // GetXYPositionsWithinManhattanDistance returns positions within distance in x,y plane
-func (p Pos) GetXYPositionsWithinManhattanDistance(d int) Positions {
-	pm := make(map[Pos]bool)
+func (p Pos[T]) GetXYPositionsWithinManhattanDistance(d T) Positions[T] {
+	pm := make(map[Pos[T]]bool)
 
-	for j := 0; j <= d; j++ {
-		for i := 0; i <= d-j; i++ {
+	for j := T(0); j <= d; j++ {
+		for i := T(0); i <= d-j; i++ {
 			topY, bottomY := p.Y-j, p.Y+j
-			topLeft := Pos{X: p.X - i, Y: topY}
-			topRight := Pos{X: p.X + i, Y: topY}
-			bottomLeft := Pos{X: p.X - i, Y: bottomY}
-			bottomRight := Pos{X: p.X + i, Y: bottomY}
+			topLeft := Pos[T]{X: p.X - i, Y: topY}
+			topRight := Pos[T]{X: p.X + i, Y: topY}
+			bottomLeft := Pos[T]{X: p.X - i, Y: bottomY}
+			bottomRight := Pos[T]{X: p.X + i, Y: bottomY}
 			pm[topLeft] = true
 			pm[topRight] = true
 			pm[bottomLeft] = true
@@ -321,18 +456,18 @@ func (p Pos) GetXYPositionsWithinManhattanDistance(d int) Positions {
 		}
 	}
 
-	ps := make(Positions, 0, len(pm))
+	ps := make(Positions[T], 0, len(pm))
 	for p := range pm {
 		ps = append(ps, p)
 	}
 	return ps
 }
 
-func (p Pos) Clone() Pos {
-	return Pos{X: p.X, Y: p.Y, Z: p.Z}
+func (p Pos[T]) Clone() Pos[T] {
+	return Pos[T]{X: p.X, Y: p.Y, Z: p.Z}
 }
 
-func (ps Positions) String() string {
+func (ps Positions[T]) String() string {
 	strs := make([]string, 0, len(ps))
 	for _, p := range ps {
 		strs = append(strs, p.String())
@@ -340,51 +475,60 @@ func (ps Positions) String() string {
 	return strings.Join(strs, ",")
 }
 
-func (p Pos) String() string {
+func (ps Positions[T]) Contains(p Pos[T]) bool {
+	for _, tp := range ps {
+		if tp == p {
+			return true
+		}
+	}
+	return false
+}
+
+func (p Pos[T]) String() string {
 	return fmt.Sprintf("{x:%d, y:%d, z:%d}", p.X, p.Y, p.Z)
 }
 
-func Min(a, b int) int {
+func Min[T IntNumber](a, b T) T {
 	if a < b {
 		return a
 	}
 	return b
 }
 
-func Max(a, b int) int {
+func Max[T IntNumber](a, b T) T {
 	if a > b {
 		return a
 	}
 	return b
 }
 
-func Abs(n int) int {
+func Abs[T IntNumber](n T) T {
 	if n < 0 {
 		return -n
 	}
 	return n
 }
 
-func (bb *BoundingBox) GetPositionsSize() uint64 {
+func (bb *BoundingBox[T]) GetPositionsSize() T {
 	xs := Abs(bb.MaxX-bb.MinX) + 1
 	ys := Abs(bb.MaxY-bb.MinY) + 1
 	zs := Abs(bb.MaxZ-bb.MinZ) + 1
-	return uint64(xs) * uint64(ys) * uint64(zs)
+	return xs * ys * zs
 }
 
-func (bb *BoundingBox) GetPositions() Positions {
-	poss := make(Positions, 0, ((bb.MaxX-bb.MinX)+1)*((bb.MaxY-bb.MinY)+1*((bb.MaxZ-bb.MinZ)+1)))
+func (bb *BoundingBox[T]) GetPositions() Positions[T] {
+	poss := make(Positions[T], 0, ((bb.MaxX-bb.MinX)+1)*((bb.MaxY-bb.MinY)+1*((bb.MaxZ-bb.MinZ)+1)))
 	for z := bb.MinZ; z <= bb.MaxZ; z++ {
 		for y := bb.MinY; y <= bb.MaxY; y++ {
 			for x := bb.MinX; x <= bb.MaxX; x++ {
-				poss = append(poss, Pos{Z: z, Y: y, X: x})
+				poss = append(poss, Pos[T]{Z: z, Y: y, X: x})
 			}
 		}
 	}
 	return poss
 }
 
-func (ps *Positions) Transform(x, y, z int) Positions {
+func (ps *Positions[T]) Transform(x, y, z T) Positions[T] {
 	for i := 0; i < len(*ps); i++ {
 		(*ps)[i].X += x
 		(*ps)[i].Y += y

@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/mbordner/aoc2023/common/file"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 type lensObj struct {
@@ -102,6 +103,6 @@ func main() {
 }
 
 func getData(path string) []string {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	return strings.Split(lines[0], ",")
 }

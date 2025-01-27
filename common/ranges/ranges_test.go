@@ -24,6 +24,16 @@ func Test_Add(t *testing.T) {
 			expectedLength: 11,
 		},
 		{
+			name: "length 1",
+			pairs: [][2]int{
+				{1, 1},
+			},
+			expectedValues: [][]int{
+				{1, 1},
+			},
+			expectedLength: 1,
+		},
+		{
 			name: "test existing overlaps new",
 			pairs: [][2]int{
 				{0, 10},

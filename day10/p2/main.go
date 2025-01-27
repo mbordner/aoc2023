@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/mbordner/aoc2023/common/array"
-	"github.com/mbordner/aoc2023/common/file"
+	"github.com/mbordner/aoc2023/common/files"
 	"github.com/mbordner/aoc2023/common/geom"
 	"github.com/mbordner/aoc2023/common/graph"
 	"github.com/mbordner/aoc2023/common/graph/djikstra"
@@ -37,15 +38,15 @@ func main() {
 		mapDirTile[d] = t
 	}
 
-	lines, _ := file.GetLines("../data.txt")
+	lines, _ := files.GetLines("../data.txt")
 	g := graph.NewGraph()
-	bb := geom.BoundingBox{}
+	bb := geom.BoundingBox[int]{}
 	var start *graph.Node
 
 	// create nodes
 	for j := 0; j < len(lines); j++ {
 		for i, b := range lines[j] {
-			p := geom.Pos{Y: j, X: i}
+			p := geom.Pos[int]{Y: j, X: i}
 			n := g.CreateNode(p)
 			tile := string(b)
 			if tile == "S" {
@@ -62,7 +63,7 @@ func main() {
 	for j := 0; j < len(lines); j++ {
 		for i, b := range lines[j] {
 			tile := string(b)
-			p := geom.Pos{Y: j, X: i}
+			p := geom.Pos[int]{Y: j, X: i}
 			np := g.GetNode(p)
 
 			cp := getConnectingPos(tile, p)
@@ -98,23 +99,23 @@ func main() {
 	sp := djikstra.GenerateShortestPaths(g, start)
 
 	maxDistance := 0
-	var mp geom.Pos
+	var mp geom.Pos[int]
 	for k, nv := range sp {
 		if nv.PreviousNode == nil {
 			delete(sp, k)
 		}
 	}
 
-	loopBB := geom.BoundingBox{}
-	ps := start.GetID().(geom.Pos)
+	loopBB := geom.BoundingBox[int]{}
+	ps := start.GetID().(geom.Pos[int])
 	loopBB.SetExtents(ps.X, ps.Y, ps.Z, ps.X, ps.Y, ps.Z)
 	loopBB.Extend(ps)
-	inner := make(map[geom.Pos]*graph.Node)
-	loopPos := make(map[geom.Pos]*graph.Node)
+	inner := make(map[geom.Pos[int]]*graph.Node)
+	loopPos := make(map[geom.Pos[int]]*graph.Node)
 	loopPos[ps] = start
 
 	for k, nv := range sp {
-		p := k.(geom.Pos)
+		p := k.(geom.Pos[int])
 		loopPos[p] = g.GetNode(p)
 		loopBB.Extend(p)
 		if int(nv.Value) > maxDistance {
@@ -128,7 +129,7 @@ func main() {
 	for j := loopBB.MinY; j <= loopBB.MaxY; j++ {
 		outer := true
 		for i := loopBB.MinX; i <= loopBB.MaxX; i++ {
-			p := geom.Pos{Y: j, X: i}
+			p := geom.Pos[int]{Y: j, X: i}
 			n := g.GetNode(p)
 			tile := n.GetProperty("tile").(string)
 			if _, ok := loopPos[p]; !ok {
@@ -186,8 +187,8 @@ func main() {
 
 }
 
-func getConnectingPos(tile string, p geom.Pos) map[geom.Direction]geom.Pos {
-	cp := make(map[geom.Direction]geom.Pos) // pos to connect
+func getConnectingPos(tile string, p geom.Pos[int]) map[geom.Direction]geom.Pos[int] {
+	cp := make(map[geom.Direction]geom.Pos[int]) // pos to connect
 	switch tile {
 	case "|":
 		cp[geom.North] = p.Transform(0, -1, 0)

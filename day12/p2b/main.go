@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/mbordner/aoc2023/common/array"
-	"github.com/mbordner/aoc2023/common/file"
 	"strings"
+
+	"github.com/mbordner/aoc2023/common/array"
+	"github.com/mbordner/aoc2023/common/files"
 )
 
 type conditionRecord struct {
@@ -100,7 +101,7 @@ func arrangements(condition string, checks []int) uint64 {
 }
 
 func getData(path string) []*conditionRecord {
-	lines, _ := file.GetLines(path)
+	lines, _ := files.GetLines(path)
 	crs := make([]*conditionRecord, len(lines))
 	for i, line := range lines {
 		cr := conditionRecord{}
