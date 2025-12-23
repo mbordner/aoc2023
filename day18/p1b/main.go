@@ -26,16 +26,15 @@ func getPoints(filename string) geom.Positions[int64] {
 	for _, line := range lines {
 		var p geom.Pos[int64]
 		matches := reLine.FindStringSubmatch(line)
-		hs := matches[3][0 : len(matches[3])-1]
-		s, _ := strconv.ParseInt(hs, 16, 64)
-		switch matches[3][len(matches[3])-1:] {
-		case "0":
+		s, _ := strconv.ParseInt(matches[2], 10, 64)
+		switch matches[1] {
+		case "R":
 			p = geom.Pos[int64]{X: 1}
-		case "2":
+		case "L":
 			p = geom.Pos[int64]{X: -1}
-		case "3":
+		case "U":
 			p = geom.Pos[int64]{Y: -1}
-		case "1":
+		case "D":
 			p = geom.Pos[int64]{Y: 1}
 		}
 		p = p.Scale(s)

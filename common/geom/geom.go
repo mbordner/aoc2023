@@ -2,10 +2,11 @@ package geom
 
 import (
 	"fmt"
-	"github.com/mbordner/aoc2023/common/array"
 	"log"
 	"math"
 	"strings"
+
+	"github.com/mbordner/aoc2023/common/array"
 )
 
 type Direction int
@@ -369,6 +370,10 @@ func (p Pos[T]) Transform(x, y, z T) Pos[T] {
 	return Pos[T]{X: p.X + x, Y: p.Y + y, Z: p.Z + z}
 }
 
+func (p Pos[T]) Add(o Pos[T]) Pos[T] {
+	return p.Transform(o.X, o.Y, o.Z)
+}
+
 func (p Pos[T]) TransformDir(d Direction, count T) Pos[T] {
 	switch d {
 	case North:
@@ -465,6 +470,47 @@ func (p Pos[T]) GetXYPositionsWithinManhattanDistance(d T) Positions[T] {
 
 func (p Pos[T]) Clone() Pos[T] {
 	return Pos[T]{X: p.X, Y: p.Y, Z: p.Z}
+}
+
+func (ps Positions[T]) PicksTheoremArea() T {
+	// picks theorem
+	// Area = I + B/2 -1
+	// where I = number of interior grid points, B = number of border grid points
+
+	B := T(0)
+
+	for p := 0; p < len(ps)-1; p++ {
+		B += T(ps[p+1].Distance(ps[p]))
+	}
+
+	A := ps.ShoelaceArea()
+
+	// I = A - B/2 +1
+	I := A - (B / T(2)) + T(1)
+
+	return I + B
+}
+
+func (ps Positions[T]) ShoelaceArea() T {
+	// shoelace algorithm
+	// sum1 := x1 * y2 + x2 * y3 + ... + xn * y1
+	// sum2 := y1 * x2 + y2 * x3 + ... + yn * x1
+	// area = | sum1 - sum 2 |  * 1/2
+	sum1 := T(0)
+	sum2 := T(0)
+	for p := 0; p < len(ps); p++ {
+		x := ps[p].X
+		y := ps[p].Y
+		yn := ps[0].Y
+		xn := ps[0].X
+		if p < len(ps)-1 {
+			yn = ps[p+1].Y
+			xn = ps[p+1].X
+		}
+		sum1 += x * yn
+		sum2 += y * xn
+	}
+	return Abs(sum1-sum2) / 2
 }
 
 func (ps Positions[T]) String() string {
