@@ -171,11 +171,20 @@ func (c *Collection[T]) Remove(l, r T) ([]T, error) {
 	return c.values, nil
 }
 
-// Subtract returns a new collection with other subtracted out
-func (c *Collection[T]) Subtract(other *Collection[T]) *Collection[T] {
+// SubtractCollection returns a new collection with other subtracted out
+func (c *Collection[T]) SubtractCollection(other *Collection[T]) *Collection[T] {
 	s := c.Clone()
 	for i := 0; i < len(other.values); i += 2 {
 		_, _ = s.Remove(other.values[i], other.values[i+1])
+	}
+	return s
+}
+
+// AddCollection returns a new collection with other added to it
+func (c *Collection[T]) AddCollection(other *Collection[T]) *Collection[T] {
+	s := c.Clone()
+	for i := 0; i < len(other.values); i += 2 {
+		_, _ = s.Add(other.values[i], other.values[i+1])
 	}
 	return s
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Subtract(t *testing.T) {
+func Test_SubtractCollection(t *testing.T) {
 	testCases := []struct {
 		name     string
 		orig     []int
@@ -43,7 +43,7 @@ func Test_Subtract(t *testing.T) {
 			for i := 0; i < len(tc.sub); i += 2 {
 				_, _ = s.Add(tc.sub[i], tc.sub[i+1])
 			}
-			results := c.Subtract(s)
+			results := c.SubtractCollection(s)
 			assert.True(t, ArrayEqual[int](results.ValuePairs(), tc.expected))
 		})
 	}
