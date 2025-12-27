@@ -2,13 +2,14 @@ package ranges
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Overlaps(t *testing.T) {
 
-	tests := []struct {
+	testCases := []struct {
 		input    []int
 		expected []int
 	}{
@@ -42,8 +43,8 @@ func Test_Overlaps(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(fmt.Sprintf("%v", tc.input), func(t *testing.T) {
+	for i, tc := range testCases {
+		t.Run(fmt.Sprintf("test %d: %v", i, tc.input), func(t *testing.T) {
 			results := Overlaps[int](tc.input)
 			assert.NotNil(t, results)
 			assert.True(t, ArrayEqual[int](results, tc.expected))
