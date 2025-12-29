@@ -10,21 +10,21 @@ import (
 	"github.com/mbordner/aoc2023/common/files"
 )
 
+// 712367660 too low
 func main() {
-	modules, cables := getModules("../test2.txt")
-	fmt.Println(cables)
+	modules, cables := getModules("../data.txt")
 
-	fmt.Println(modules)
 	button := modules.Get(ButtonID).(*ButtonModule)
-	button.Press()
-	fmt.Println(modules)
-	button.Press()
-	fmt.Println(modules)
-	button.Press()
-	fmt.Println(modules)
-	button.Press()
-	fmt.Println(modules)
+	for i := 0; i < 1000; i++ {
+		button.Press()
+		if !cables.queue.Empty() {
+			panic("queue should be drained at the end of a button.Press() call.")
+		}
+	}
 
+	lows, highs := cables.Counts()
+	fmt.Println(lows, highs)
+	fmt.Println(lows * highs)
 }
 
 const (
@@ -57,22 +57,33 @@ const (
 )
 
 type Cables struct {
-	queue common.Queue[*Pulse]
+	lowPulseCount  uint64
+	highPulseCount uint64
+	queue          common.Queue[*Pulse]
+}
+
+func (c *Cables) Counts() (uint64, uint64) {
+	return c.lowPulseCount, c.highPulseCount
 }
 
 func (c *Cables) Send(pulse *Pulse) {
 	wasEmpty := c.queue.Empty()
 
 	for _, t := range pulse.To {
-		p := Pulse{From: pulse.From, Type: pulse.Type, To: []Module{t}}
-		fmt.Println(&p)
-		c.queue.Enqueue(&p)
+		c.queue.Enqueue(&Pulse{From: pulse.From, Type: pulse.Type, To: []Module{t}})
 	}
 
 	if wasEmpty {
 		for !c.queue.Empty() {
-			p := *(c.queue.Dequeue())
+			p := c.queue[0]
+			if p.Type == High {
+				c.highPulseCount++
+			} else if p.Type == Low {
+				c.lowPulseCount++
+			}
+			//fmt.Println(p)
 			p.To[0].Receive(p)
+			c.queue.Dequeue()
 		}
 	}
 }
@@ -91,10 +102,14 @@ type Pulse struct {
 
 func (p *Pulse) String() string {
 	to := make([]string, len(p.To))
+	ptStr := "high"
+	if p.Type == Low {
+		ptStr = "low"
+	}
 	for i, m := range p.To {
 		to[i] = m.ID()
 	}
-	return fmt.Sprintf("[%s -(%s)-> %s]", p.From.ID(), p.Type, strings.Join(to, ","))
+	return fmt.Sprintf("%s -%s-> %s", p.From.ID(), ptStr, strings.Join(to, ","))
 }
 
 type Modules struct {
@@ -106,9 +121,6 @@ func (m *Modules) Set(id string, module Module) {
 	if _, e := m.modulesMap[id]; !e {
 		m.modulesMap[id] = module
 		m.modules = append(m.modules, module)
-		sort.Slice(m.modules, func(i, j int) bool {
-			return m.modules[i].ID() < m.modules[j].ID()
-		})
 	}
 }
 
