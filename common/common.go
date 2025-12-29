@@ -311,7 +311,7 @@ func (vs VisitedState[S, V]) Set(s S, v V) {
 	vs[s] = v
 }
 
-type Queue[T comparable] []T
+type Queue[T any] []T
 
 func (q *Queue[T]) Enqueue(s T) {
 	*q = append(*q, s)
@@ -434,11 +434,11 @@ func ByteCharToInt(char byte) int {
 	return int(char - '0')
 }
 
-func StrToA(str string) int {
-	return int(StrToA64(str))
+func StrToInt(str string) int {
+	return int(StrToInt64(str))
 }
 
-func StrToA64(str string) int64 {
+func StrToInt64(str string) int64 {
 	val, _ := strconv.ParseInt(str, 10, 64)
 	return val
 }
@@ -482,7 +482,6 @@ func GetRepeatingByteStats(s string, min int) []RepeatingByteStat {
 
 	return rbs
 }
-
 
 var (
 	ReDigits = regexp.MustCompile(`\d+`)
