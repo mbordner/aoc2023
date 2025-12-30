@@ -370,6 +370,16 @@ func (pc PosContainer) Has(p Pos) bool {
 	return false
 }
 
+func (pc PosContainer) Len() int {
+	l := 0
+	for _, b := range pc {
+		if b {
+			l++
+		}
+	}
+	return l
+}
+
 func (pc PosContainer) Extents() (Pos, Pos) {
 	var minP, maxP Pos
 	if len(pc) > 0 {

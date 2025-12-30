@@ -15,16 +15,18 @@ const (
 )
 
 func main() {
-	grid, start, gardens, rocks := getGarden("../test1.txt")
+	_, start, gardens, rocks := getGarden("../data.txt")
 
 	stepsGenerator, steps := NewStepsGenerator(gardens, rocks, start)
 	stepsCount := 0
-	for stepsCount < 6 {
+	for stepsCount < 64 {
 		steps = stepsGenerator.Generate(steps)
 		stepsCount++
-		fmt.Println("-----", stepsCount, "-----")
-		printGrid(grid, steps)
+		//fmt.Println("-----", stepsCount, "-----")
+		//printGrid(grid, steps)
 	}
+
+	fmt.Println(steps.Len())
 }
 
 func printGrid(grid common.Grid, steps common.PosContainer) {
