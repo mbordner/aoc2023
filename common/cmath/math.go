@@ -128,3 +128,30 @@ P(n,k) from n card deck, how many k card decks can be made.
 
 k! - how many different ways to arrange k cards
 */
+
+func GCD[T Number](a, b T) T {
+	a = ABS(a)
+	b = ABS(b)
+	for b != 0 {
+		a, b = b, T(int64(a)%int64(b))
+	}
+	return a
+}
+
+func LCM[T Number](nums ...T) T {
+	var res T
+	if len(nums) > 1 {
+		res = nums[0]
+		for i := 1; i < len(nums); i++ {
+			res = ABS(res*nums[i]) / GCD(res, nums[i])
+		}
+	}
+	return res
+}
+
+func ABS[T Number](a T) T {
+	if a < T(0) {
+		return a * T(-1)
+	}
+	return a
+}

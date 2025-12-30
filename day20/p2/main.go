@@ -1,5 +1,455 @@
 package main
 
-func main() {
+import (
+	"fmt"
+	"slices"
+	"sort"
+	"strings"
 
+	"github.com/mbordner/aoc2023/common"
+	"github.com/mbordner/aoc2023/common/cmath"
+	"github.com/mbordner/aoc2023/common/files"
+)
+
+func main() {
+	modules, cables := getModules("../data.txt")
+
+	watched := make(map[string]uint64)
+
+	output := modules.Get("rx").(*OutputModule)
+	for _, cim := range output.InputModules() {
+		for _, im := range cim.(*ConjunctionModule).InputModules() {
+			watched[im.(*ConjunctionModule).ID()] = uint64(0)
+		}
+	}
+
+	pressed := uint64(0)
+	button := modules.Get(ButtonID).(*ButtonModule)
+	for {
+		button.Press()
+		pressed++
+		for w, c := range watched {
+			if c == 0 {
+				if v, e := cables.highPulseFromCount[w]; e {
+					if v > 0 {
+						watched[w] = pressed
+					}
+				}
+			}
+		}
+		foundAll := true
+		for _, c := range watched {
+			if c == uint64(0) {
+				foundAll = false
+				break
+			}
+		}
+		if foundAll {
+			break
+		}
+	}
+
+	vals := make([]int64, 0, len(watched))
+	for _, v := range watched {
+		vals = append(vals, int64(v))
+	}
+	fmt.Println(cmath.LCM(vals...))
+
+}
+
+const (
+	ButtonID      = "button"
+	BroadcasterID = "broadcaster"
+)
+
+type PulseType int
+
+func (t PulseType) String() string {
+	if t == High {
+		return "1"
+	}
+	return "0"
+}
+
+const (
+	Low PulseType = iota
+	High
+)
+
+type ModuleType int
+
+const (
+	Button ModuleType = iota
+	BroadCaster
+	FlipFlop
+	Conjunction
+	Output
+)
+
+type Cables struct {
+	lowPulseCount      uint64
+	highPulseCount     uint64
+	lowPulseFromCount  map[string]uint64
+	highPulseFromCount map[string]uint64
+	queue              common.Queue[*Pulse]
+}
+
+func (c *Cables) Counts() (uint64, uint64) {
+	return c.lowPulseCount, c.highPulseCount
+}
+
+func (c *Cables) Send(pulse *Pulse) {
+	wasEmpty := c.queue.Empty()
+
+	for _, t := range pulse.To {
+		c.queue.Enqueue(&Pulse{From: pulse.From, Type: pulse.Type, To: []Module{t}})
+	}
+
+	if wasEmpty {
+		for !c.queue.Empty() {
+			p := c.queue[0]
+			if p.Type == High {
+				c.highPulseCount++
+				if v, e := c.highPulseFromCount[p.From.ID()]; e {
+					c.highPulseFromCount[p.From.ID()] = v + 1
+				} else {
+					c.highPulseFromCount[p.From.ID()] = 1
+				}
+			} else if p.Type == Low {
+				c.lowPulseCount++
+				if v, e := c.lowPulseFromCount[p.From.ID()]; e {
+					c.lowPulseFromCount[p.From.ID()] = v + 1
+				} else {
+					c.lowPulseFromCount[p.From.ID()] = 1
+				}
+			}
+			//fmt.Println(p)
+			p.To[0].Receive(p)
+			c.queue.Dequeue()
+		}
+	}
+}
+
+func NewCables() *Cables {
+	cables := new(Cables)
+	cables.lowPulseFromCount = make(map[string]uint64)
+	cables.highPulseFromCount = make(map[string]uint64)
+	cables.queue = make(common.Queue[*Pulse], 0, 100)
+	return cables
+}
+
+type Pulse struct {
+	From Module
+	To   []Module
+	Type PulseType
+}
+
+func (p *Pulse) String() string {
+	to := make([]string, len(p.To))
+	ptStr := "high"
+	if p.Type == Low {
+		ptStr = "low"
+	}
+	for i, m := range p.To {
+		to[i] = m.ID()
+	}
+	return fmt.Sprintf("%s -%s-> %s", p.From.ID(), ptStr, strings.Join(to, ","))
+}
+
+type Modules struct {
+	modulesMap map[string]Module
+	modules    []Module
+}
+
+func (m *Modules) Set(id string, module Module) {
+	if _, e := m.modulesMap[id]; !e {
+		m.modulesMap[id] = module
+		m.modules = append(m.modules, module)
+	}
+}
+
+func (m *Modules) Get(id string) Module {
+	if module, exists := m.modulesMap[id]; exists {
+		return module
+	}
+	return nil
+}
+
+func (m *Modules) GetAll() []Module {
+	return m.modules
+}
+
+func (m *Modules) String() string {
+	ms := make([]string, len(m.modules))
+	for i, m := range m.modules {
+		ms[i] = fmt.Sprintf("{%s:%s}", m.ID(), m.String())
+	}
+	return fmt.Sprintf("{%s}", strings.Join(ms, ","))
+}
+
+func NewModules() *Modules {
+	modules := new(Modules)
+	modules.modulesMap = make(map[string]Module)
+	modules.modules = make([]Module, 0, 10)
+	return modules
+}
+
+type Module interface {
+	ID() string
+	Receive(pulse *Pulse)
+	Send(pulseType PulseType)
+	Type() ModuleType
+	DestinationModuleIDs() []string
+	String() string
+	AddInput(input Module)
+	AddDestination(destination Module)
+	InputModules() []Module
+	DestinationModules() []Module
+}
+
+type ModuleBase struct {
+	id                   string
+	cables               *Cables
+	moduleType           ModuleType
+	destinationModuleIDs []string
+	inputModules         []Module
+	destinationModules   []Module
+}
+
+func (m *ModuleBase) InitBase(cables *Cables, moduleType ModuleType, id string, destinationModuleIDs []string) {
+	m.cables = cables
+	m.moduleType = moduleType
+	m.id = id
+	m.destinationModuleIDs = destinationModuleIDs
+	m.destinationModules = make([]Module, 0, len(destinationModuleIDs))
+	m.inputModules = make([]Module, 0, 10)
+}
+
+func (m *ModuleBase) ID() string {
+	return m.id
+}
+func (m *ModuleBase) Type() ModuleType {
+	return m.moduleType
+}
+
+func (m *ModuleBase) DestinationModuleIDs() []string {
+	return m.destinationModuleIDs
+}
+
+func (m *ModuleBase) Send(pulseType PulseType) {
+	m.cables.Send(&Pulse{From: m, Type: pulseType, To: m.destinationModules})
+}
+
+func (m *ModuleBase) Receive(pulse *Pulse) {
+
+}
+
+func (m *ModuleBase) String() string {
+	return "{}"
+}
+
+func (m *ModuleBase) InputModules() []Module {
+	i := make([]Module, len(m.inputModules))
+	copy(i, m.inputModules)
+	return i
+}
+
+func (m *ModuleBase) DestinationModules() []Module {
+	d := make([]Module, len(m.destinationModules))
+	copy(d, m.destinationModules)
+	return d
+}
+
+func (m *ModuleBase) sortModules(modules []Module) {
+	sort.Slice(modules, func(i, j int) bool {
+		return modules[i].ID() < modules[j].ID()
+	})
+}
+
+func (m *ModuleBase) AddInput(input Module) {
+	if !slices.Contains(m.inputModules, input) {
+		m.inputModules = append(m.inputModules, input)
+		m.sortModules(m.inputModules)
+	}
+}
+
+func (m *ModuleBase) AddDestination(destination Module) {
+	if !slices.Contains(m.destinationModules, destination) {
+		m.destinationModules = append(m.destinationModules, destination)
+	}
+}
+
+type OutputModule struct {
+	ModuleBase
+	receivedLowPulse bool
+}
+
+func (m *OutputModule) Receive(pulse *Pulse) {
+	if pulse.Type == Low {
+		m.receivedLowPulse = true
+	}
+}
+
+func (m *OutputModule) DidReceiveLowPulse() bool {
+	return m.receivedLowPulse
+}
+
+func NewOutputModule(cables *Cables, id string) *OutputModule {
+	output := new(OutputModule)
+	output.InitBase(cables, Output, id, []string{})
+	return output
+}
+
+type ButtonModule struct {
+	ModuleBase
+}
+
+func (b *ButtonModule) Press() {
+	b.Send(Low)
+}
+
+func NewButtonModule(cables *Cables) *ButtonModule {
+	button := new(ButtonModule)
+	button.InitBase(cables, Button, ButtonID, []string{BroadcasterID})
+	return button
+}
+
+type BroadCasterModule struct {
+	ModuleBase
+}
+
+func (b *BroadCasterModule) Receive(pulse *Pulse) {
+	b.Send(pulse.Type)
+}
+
+func NewBroadCasterModule(cables *Cables, destinations []string) *BroadCasterModule {
+	broadCaster := new(BroadCasterModule)
+	broadCaster.InitBase(cables, BroadCaster, BroadcasterID, destinations)
+	return broadCaster
+}
+
+type FlipFlopModule struct {
+	ModuleBase
+	on bool
+}
+
+func (f *FlipFlopModule) State() bool {
+	return f.on
+}
+
+func (f *FlipFlopModule) Receive(pulse *Pulse) {
+	if pulse.Type == Low {
+		f.on = !f.on
+		if f.on {
+			f.Send(High)
+		} else {
+			f.Send(Low)
+		}
+	}
+}
+
+func (f *FlipFlopModule) String() string {
+	if f.on {
+		return "{1}"
+	}
+	return "{0}"
+}
+
+func NewFlipFlopModule(cables *Cables, id string, destinations []string) *FlipFlopModule {
+	flipflop := new(FlipFlopModule)
+	flipflop.InitBase(cables, FlipFlop, id, destinations)
+	return flipflop
+}
+
+type ConjunctionModule struct {
+	ModuleBase
+	lastPulses map[string]PulseType
+}
+
+func (c *ConjunctionModule) State() map[string]PulseType {
+	s := make(map[string]PulseType)
+	for k, v := range c.lastPulses {
+		s[k] = v
+	}
+	return s
+}
+
+func (c *ConjunctionModule) AddInput(input Module) {
+	c.ModuleBase.AddInput(input)
+	c.lastPulses[input.ID()] = Low
+}
+
+func (c *ConjunctionModule) AreAllLastHigh() bool {
+	allHigh := true
+	for _, pt := range c.lastPulses {
+		if pt == Low {
+			allHigh = false
+			break
+		}
+	}
+	return allHigh
+}
+
+func (c *ConjunctionModule) Receive(pulse *Pulse) {
+	c.lastPulses[pulse.From.ID()] = pulse.Type
+	allHigh := c.AreAllLastHigh()
+	if allHigh {
+		c.Send(Low)
+	} else {
+		c.Send(High)
+	}
+}
+
+func (c *ConjunctionModule) String() string {
+	lps := make([]string, 0, len(c.lastPulses))
+	for _, input := range c.ModuleBase.inputModules {
+		id := input.ID()
+		lps = append(lps, fmt.Sprintf("%s:%s", id, c.lastPulses[id]))
+	}
+	return fmt.Sprintf("{%s}", strings.Join(lps, ","))
+}
+
+func NewConjunctionModule(cables *Cables, id string, destinations []string) *ConjunctionModule {
+	conjunction := new(ConjunctionModule)
+	conjunction.InitBase(cables, Conjunction, id, destinations)
+	conjunction.lastPulses = make(map[string]PulseType)
+	return conjunction
+}
+
+func getModules(filename string) (*Modules, *Cables) {
+	cables := NewCables()
+	modules := NewModules()
+	button := NewButtonModule(cables)
+	modules.Set(button.ID(), button)
+	lines := files.MustGetLines(filename)
+	for _, line := range lines {
+		tokens := strings.Split(line, " -> ")
+		destinations := strings.Split(tokens[1], ", ")
+		if tokens[0] == BroadcasterID {
+			broadcaster := NewBroadCasterModule(cables, destinations)
+			modules.Set(broadcaster.ID(), broadcaster)
+		} else {
+			var module Module
+			if tokens[0][0] == '%' {
+				module = NewFlipFlopModule(cables, tokens[0][1:], destinations)
+			} else if tokens[0][0] == '&' {
+				module = NewConjunctionModule(cables, tokens[0][1:], destinations)
+			} else {
+				panic("invalid module id")
+			}
+			modules.Set(module.ID(), module)
+		}
+	}
+	for _, module := range modules.GetAll() {
+		for _, destination := range module.DestinationModuleIDs() {
+			d := modules.Get(destination)
+			if d == nil {
+				d = NewOutputModule(cables, destination)
+				modules.Set(d.ID(), d)
+			}
+			d.AddInput(module)
+			module.AddDestination(d)
+		}
+	}
+	return modules, cables
 }
