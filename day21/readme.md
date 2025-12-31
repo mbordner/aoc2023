@@ -1,4 +1,4 @@
-```
+``` 
 --- Day 21: Step Counter ---
 You manage to catch the airship right as it's dropping someone else off on their all-expenses-paid trip to Desert Island! It even helpfully drops you off near the gardener and his massive farm.
 
@@ -81,8 +81,6 @@ Starting from the garden plot marked S on your map, how many garden plots could 
 
 Your puzzle answer was 3733.
 
-The first half of this puzzle is complete! It provides one gold star: *
-
 --- Part Two ---
 The Elf seems confused by your answer until he realizes his mistake: he was reading from a list of his favorite numbers that are both perfect squares and perfect cubes, not his step counter.
 
@@ -137,4 +135,8 @@ In exactly 500 steps, he can reach 167004 garden plots.
 In exactly 1000 steps, he can reach 668697 garden plots.
 In exactly 5000 steps, he can reach 16733044 garden plots.
 However, the step count the Elf needs is much larger! Starting from the garden plot marked S on your infinite map, how many garden plots could the Elf reach in exactly 26501365 steps?
+
+Your puzzle answer was 617729401414635.
+
+Both parts of this puzzle are complete! They provide two gold stars: **
 ```
