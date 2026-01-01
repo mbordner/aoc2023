@@ -364,6 +364,23 @@ type Point struct {
 	Z int64
 }
 
+func (p Point) Less(o Point) bool {
+	if p.Z > o.Z {
+		return false
+	} else if o.Z > p.Z {
+		return true
+	}
+	if p.Y > o.Y {
+		return false
+	} else if o.Y > p.Y {
+		return true
+	}
+	if p.X > o.X {
+		return false
+	}
+	return true
+}
+
 func (p Point) String() string {
 	return fmt.Sprintf("%d,%d,%d", p.X, p.Y, p.Z)
 }
@@ -431,6 +448,10 @@ type Cuboid struct {
 	Max Point
 }
 
+func (c Cuboid) Less(o Cuboid) bool {
+	return c.Min.Less(o.Min)
+}
+
 func (c Cuboid) String() string {
 	return fmt.Sprintf("%s,%s", c.Min, c.Max)
 }
@@ -440,6 +461,9 @@ func NewCuboid(s string) Cuboid {
 	c := Cuboid{}
 	c.Min = NewPoint(strings.Join(tokens[0:3], ","))
 	c.Max = NewPoint(strings.Join(tokens[3:], ","))
+	if c.Max.Less(c.Min) {
+		c.Min, c.Max = c.Max, c.Min
+	}
 	return c
 }
 
@@ -575,6 +599,28 @@ func (c Cuboid) Encloses(o Cuboid) bool {
 		}
 	}
 	return true
+}
+
+func (cs Cuboids) Bounds() Cuboid {
+	c := cs[0]
+	for _, o := range cs[1:] {
+		c.Min = c.Min.Min(o.Min)
+		c.Max = c.Max.Max(o.Max)
+	}
+	return c
+}
+
+func (cs Cuboids) AnyOverlap() bool {
+	if len(cs) > 1 {
+		for i := 0; i < len(cs)-1; i++ {
+			for j := i + 1; j < len(cs); j++ {
+				if cs[i].Overlaps(cs[j]) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func (cs Cuboids) Overlaps() *Cuboid {
