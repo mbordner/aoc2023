@@ -277,6 +277,15 @@ type PrevLinkState[S comparable, Action any] struct {
 	prev   S
 	action Action
 }
+
+func (pls PrevLinkState[S, Action]) Action() Action {
+	return pls.action
+}
+
+func (pls PrevLinkState[S, Action]) Prev() S {
+	return pls.prev
+}
+
 type PreviousState[S comparable, Action any] map[S]PrevLinkState[S, Action]
 
 func (ps PreviousState[S, Action]) Link(state S, prev S, action Action) {
