@@ -494,7 +494,7 @@ func GetRepeatingByteStats(s string, min int) []RepeatingByteStat {
 }
 
 var (
-	ReDigits = regexp.MustCompile(`\d+`)
+	ReDigits = regexp.MustCompile(`-?\d+`)
 )
 
 type Ints interface {
